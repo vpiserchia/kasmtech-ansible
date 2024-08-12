@@ -37,6 +37,19 @@
   become: true
   when: kasm_network.stdout | length > 0
 
+- name: Check for kasm sidecar network
+  shell: docker network ls -q -f name=kasm_sidecar_network
+  register: kasm_sidecar_network
+  become: true
+  ignore_errors: true
+  changed_when: false
+
+- name: Remove kasm sidecar network
+  shell: docker network rm kasm_sidecar_network
+  ignore_errors: true
+  become: true
+  when: kasm_sidecar_network.stdout | length > 0
+
 - name: Get kasm database docker volume
   shell: docker volume ls --filter name=kasm_db_* -q
   ignore_errors: true
@@ -64,11 +77,16 @@
     docker images kasmweb/api-private -q
     docker images kasmweb/guac -q
     docker images kasmweb/guac-private -q
+    docker images kasmweb/kasm-guac -q
+    docker images kasmweb/kasm-guac-private -q
     docker images kasmweb/proxy -q
     docker images kasmweb/proxy-private -q
     docker images redis -q
     docker images postgres -q
-    
+    docker images kasmweb/rdp-gateway -q
+    docker images kasmweb/rdp-gateway-private -q
+    docker images kasmweb/rdp-https-gateway -q
+    docker images kasmweb/rdp-https-gateway-private -q
   register: kasm_images
   become: true
   ignore_errors: true
@@ -79,6 +97,27 @@
   become: true
   ignore_errors: true
   with_items: "{{ kasm_images.stdout_lines }}"
+
+- name: Get sidecar plugin
+  shell: "docker plugin ls"
+  become: true
+  ignore_errors: true
+  changed_when: false
+  register: plugin_list
+
+- name: Filter sidecar plugin
+  set_fact:
+    sidecar_plugins: "{{ plugin_list.stdout_lines | select('match', '.*Kasm Network plugin for Docker.*') | list }}" 
+
+- name: Disable sidecar plugin
+  shell: "docker plugin disable {{item.split()[1]}}" # Grab second column... It contains the plugin name
+  become: true
+  with_items: "{{ sidecar_plugins }}"
+
+- name: Remove sidecar plugin
+  shell: "docker plugin rm {{item.split()[1]}}" # Grab second column... It contains the plugin name
+  become: true
+  with_items: "{{ sidecar_plugins }}"
 
 - name: Remove kasm install directory
   file:
