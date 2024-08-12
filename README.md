@@ -64,7 +64,7 @@ It has been tested on CentOS 7.9.2009, CentOS 8.4.2105, Debian 9.13, Debian 10.1
 
 3. Download the Kasm Workspaces installer from https://www.kasmweb.com/downloads.html and copy it to `roles/install_common/files`. 
     
-    Optionally, if doing an offline installation: Download and copy the workspace_images and service_images files to `roles/install_common/files`.
+    Optionally, if doing an offline installation: Download and copy the workspace_images, service_images and network plugin files to `roles/install_common/files`.
    
 4. Run the deployment.
 
