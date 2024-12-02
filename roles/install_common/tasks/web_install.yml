@@ -23,7 +23,7 @@
       --database-user {{ database_user }} 
       --database-name {{ database_name }}
       --db-port {{ database_port }}
-      --server-zone {{ group_names[0] }}
+      --server-zone {{ zones[0] }}
       --redis-hostname {{ redis_ip }}
       {{ '--no-db-ssl ' if not database_ssl }} 
       {{ '--offline-service ' ~ service_images_copy.dest if service_images_file }} 
