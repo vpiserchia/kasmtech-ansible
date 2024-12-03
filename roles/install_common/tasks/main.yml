@@ -17,22 +17,26 @@
 
 - set_fact:
     web_ip : "{{ ( kasm_mode == 'multi'|ternary(
-                     groups[kasm_web_group_name]
-                       | map('extract', hostvars)
-                         | selectattr('ansible_default_ipv4', 'defined')
-                           | map(attribute='ansible_default_ipv4') | list
-                             | first, hostvars[inventory_hostname].ansible_default_ipv4)
+                     (
+                       groups[kasm_web_group_name]
+                         | map('extract', hostvars)
+                           | selectattr('ansible_default_ipv4', 'defined')
+                             | map(attribute='ansible_default_ipv4')
+                               | list
+                     )[kasm_default_web], hostvars[inventory_hostname].ansible_default_ipv4)
                  ).address }}"
     # IP of the host that ansible is being ran against
     target_ip: "{{ ansible_default_ipv4.address }}"
 
 - set_fact:
     db_ip : "{{ ( kasm_mode == 'multi'|ternary(
-                    groups[kasm_db_group_name]
-                      | map('extract', hostvars)
-                        | selectattr('ansible_default_ipv4', 'defined')
-                          | map(attribute='ansible_default_ipv4') | list
-                            | first, hostvars[inventory_hostname].ansible_default_ipv4)
+                    (
+                      groups[kasm_db_group_name]
+                        | map('extract', hostvars)
+                          | selectattr('ansible_default_ipv4', 'defined')
+                            | map(attribute='ansible_default_ipv4')
+                              | list
+                    )[kasm_default_db], hostvars[inventory_hostname].ansible_default_ipv4)
                 ).address }}"
   when:
     - not kasm_database_hostname
@@ -45,11 +49,13 @@
 
 - set_fact:
     redis_ip : "{{ ( kasm_mode == 'multi'|ternary(
-                       groups[kasm_db_group_name]
-                         | map('extract', hostvars)
-                           | selectattr('ansible_default_ipv4', 'defined')
-                             | map(attribute='ansible_default_ipv4') | list
-                               | first, hostvars[inventory_hostname].ansible_default_ipv4)
+                       (
+                         groups[kasm_db_group_name]
+                           | map('extract', hostvars)
+                             | selectattr('ansible_default_ipv4', 'defined')
+                               | map(attribute='ansible_default_ipv4')
+                                 | list
+                       )[kasm_default_db], hostvars[inventory_hostname].ansible_default_ipv4)
                    ).address }}"
   when:
     - not kasm_redis_hostname

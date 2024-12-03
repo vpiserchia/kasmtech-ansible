@@ -39,6 +39,7 @@ kasm_registration_token: ''
 # IE when set to 1 all additional hosts in that zone will use zone1_web_1 as their webserver
 # Set to false to scale out as a linked group IE zone1_web_1/zone1_agent_1/zone1_guac_1/zone1_proxy_1
 kasm_default_web: 1
+kasm_default_db: "{{ kasm_default_web }}"
 
 ## Zone configuration ##
 # Define multiple zones here if defined in inventory above
