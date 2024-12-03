@@ -1,0 +1,16 @@
+---
+
+- name: Run multi server install tasks
+  include_tasks:
+    file: multi_server.yml
+  when:
+    - kasm_mode == 'multi'
+
+- name: Run single install tasks
+  include_tasks:
+    file: single_server.yml
+  when:
+    - kasm_mode == 'single'
+
+  
+

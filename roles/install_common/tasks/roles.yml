@@ -1,0 +1,29 @@
+# Note: in case kasm_roles is not passed we create it
+- name: node roles setup
+  set_fact:
+    kasm_roles: >-
+      {%- set roles = [] -%}
+      {%- for (var, role, default_) in [
+          ("kasm_agent", "agent", kasm_agent),
+          ("kasm_db", "db", kasm_db),
+          ("kasm_web", "web", kasm_web),
+          ("kasm_proxy", "proxy", kasm_proxy),
+          ("kasm_guac", "guac", kasm_guac)
+      ] -%}
+        {%- if hostvars[inventory_hostname][var]|d(default_) -%}
+          {%- set _ = roles.append(role) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ roles }}
+  when:
+    - kasm_roles | d('', true) | trim == ''
+    - kasm_mode != single
+
+# Make sure that in multi server deployment instal
+- assert:
+    msg:
+      When deploying "multi server" mode ONLY one role per node is supported
+      for more information see https://kasmweb.com/docs/latest/install/multi_server_install.htm
+  that:
+    - kasm_mode != 'single'
+    - kasm_roles | length == 1

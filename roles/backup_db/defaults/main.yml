@@ -1,0 +1,9 @@
+## Database Backup settings ##
+# This does not support remote database type installations
+# Directory where backups are placed on db server
+kasm_remote_backup_dir: /srv/backup/kasm/
+# Number of days that logs backups are retained on db host
+kasm_retention_days: 10
+# If this is uncommented, backups will be copied from remote server to the local ansible host
+kasm_local_backup_dir: backup/
+

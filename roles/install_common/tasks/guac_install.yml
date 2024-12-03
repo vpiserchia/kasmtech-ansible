@@ -1,6 +1,6 @@
 - name: Check connection from guac to webserver
   uri:
-    url: "https://{{ web_ip }}:{{ proxy_port }}/api/__healthcheck"
+    url: "https://{{ web_ip }}:{{ kasm_proxy_port }}/api/__healthcheck"
     timeout: 5
     validate_certs: false
   register: _result
@@ -13,10 +13,10 @@
     bash {{ tempdir.path }}/kasm_release/install.sh 
       --role guac 
       --accept-eula 
-      --proxy-port {{ proxy_port }} 
+      --proxy-port {{ kasm_proxy_port }} 
       --api-hostname {{ web_ip }} 
       --public-hostname {{ target_ip }} 
-      --registration-token {{ registration_token }} 
+      --registration-token {{ kasm_registration_token }} 
       {{ '-s ' ~ service_images_copy.dest if service_images_file }}
   register: install_output
   become: true

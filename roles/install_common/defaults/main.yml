@@ -1,0 +1,73 @@
+---
+
+# Allow for single or multi mode installation
+# see: https://kasmweb.com/docs/latest/install/multi_server_install.htm
+# and https://kasmweb.com/docs/latest/install/single_server_install.html
+kasm_mode: multi
+
+# when in single mode we can define role
+kasm_agent: true
+kasm_db: true
+kasm_web: true
+kasm_proxy: true
+kasm_guac: true
+
+# This allows reusage of the role
+kasm_agent_group_name: kasm_agent
+kasm_db_group_name: kasm_db
+kasm_web_group_name: kasm_web
+kasm_proxy_group_name: kasm_proxy
+kasm_guac_group_name: kasm_guac
+
+##############################
+# Installation configuration #
+##############################
+
+## Credentials ##
+# If left empty secure passwords will be generated
+# during the installation and substituted in upon completion
+kasm_user_password: ''
+kasm_admin_password: ''
+kasm_database_password: ''
+kasm_redis_password: ''
+kasm_manager_token: ''
+kasm_registration_token: ''
+
+## Scaling Configuration ##
+
+# Stick scaled agents/guacs/proxys to a default web server
+# IE when set to 1 all additional hosts in that zone will use zone1_web_1 as their webserver
+# Set to false to scale out as a linked group IE zone1_web_1/zone1_agent_1/zone1_guac_1/zone1_proxy_1
+kasm_default_web: 1
+
+## Zone configuration ##
+# Define multiple zones here if defined in inventory above
+kasm_zones:
+  - zone1
+
+## General settings ##
+kasm_proxy_port: 443
+kasm_start_docker_on_boot: true
+kasm_desired_swap_size: 5g # Default agent swap size for all agents
+
+## PostgreSQL settings ##
+
+##############################################
+# PostgreSQL remote DB connection parameters #
+##############################################
+# The following parameters need to be set only once on database initialization
+kasm_init_remote_db: false # swap to true to activate
+database_master_user: postgres
+database_master_password: changeme
+
+database_hostname: false # swap to a string to activate
+
+# The remaining variables can be modified to suite your needs or left as is in a normal deployment
+kasm_database_user: kasmapp
+kasm_database_name: kasm
+kasm_database_port: 5432
+kasm_database_ssl: true
+
+## redis settings ##
+# redis connection parameters if hostname is set the web role will use a remote redis server
+kasm_redis_hostname: false

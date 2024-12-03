@@ -1,3 +1,9 @@
+---
+
+# Check node roles and deployment mode
+- assert:
+    that: true
+
 - include_tasks: 
     file: default_credentials.yml
 
@@ -10,72 +16,60 @@
     kasm_installed: "{{ kasm_path.stat.exists }}"
 
 - set_fact:
-    web_ip: "{{ hostvars[group_names[0] + '_web_' + inventory_hostname.split('_')[2]].ansible_default_ipv4.address }}"
+    web_ip : "{{ (
+                   groups[kasm_web_group_name]
+                     | map('extract', hostvars)
+                       | selectattr('ansible_default_ipv4', 'defined')
+                         | map(attribute='ansible_default_ipv4') | list
+                           | first
+                 ).address }}"
     # IP of the host that ansible is being ran against
     target_ip: "{{ ansible_default_ipv4.address }}"
-  when: not default_web
+  when:
+    - kasm_mode == 'multi'
 
 - set_fact:
-    web_ip: "{{ hostvars[group_names[0] + '_web_' + default_web|string].ansible_default_ipv4.address }}"
-    # IP of the host that ansible is being ran against
-    target_ip: "{{ ansible_default_ipv4.address }}"
-  when: default_web
+    db_ip : "{{ (
+                  groups[kasm_db_group_name]
+                    | map('extract', hostvars)
+                      | selectattr('ansible_default_ipv4', 'defined')
+                        | map(attribute='ansible_default_ipv4') | list
+                          | first
+                ).address }}"
+  when:
+    - not kasm_database_hostname
+    - kasm_mode == 'multi'
 
 - set_fact:
-    db_ip: "{{ hostvars['zone1_db_1'].ansible_default_ipv4.address }}"
-  when: not database_hostname
+    db_ip: "{{ kasm_database_hostname }}"
+  when:
+    - kasm_database_hostname
+    - kasm_mode == 'multi'
 
 - set_fact:
-    db_ip: "{{ database_hostname }}"
-  when: database_hostname
+    redis_ip : "{{ (
+                     groups[kasm_db_group_name]
+                       | map('extract', hostvars)
+                         | selectattr('ansible_default_ipv4', 'defined')
+                           | map(attribute='ansible_default_ipv4') | list
+                             | first
+                   ).address }}"
+  when:
+    - not kasm_redis_hostname
+    - kasm_mode == 'multi'
 
 - set_fact:
-    redis_ip: "{{ hostvars['zone1_db_1'].ansible_default_ipv4.address }}"
-  when: not redis_hostname
-
-- set_fact:
-    redis_ip: "{{ redis_hostname }}"
-  when: redis_hostname
+    redis_ip: "{{ kasm_redis_hostname }}"
+  when:
+    - kasm_redis_hostname
+    - kasm_mode == 'multi'
 
 - name: Override manager hostname if configured
   set_fact:
-    web_ip: "{{ manager_hostname }}"
-  when: manager_hostname is defined
-
-- name: Check if kasm swapfile exists
-  stat:
-    path: /mnt/kasm.swap
-  register: kasm_swapfile
+    web_ip: "{{ kasm_manager_hostname }}"
   when:
-    - "'agent' in group_names[1].split('_')"
-
-- name: Get current swapsize in bytes
-  # Meminfo outputs in Kb for some reason so we convert to bytes
-  shell: cat /proc/meminfo | grep SwapTotal | awk '{print $2 * 1024}'
-  register: current_swap_size
-  changed_when: false
-  when:
-    - "'agent' in group_names[1].split('_')"
-
-- set_fact:
-    # We only want to make a swapfile large enough to make up the difference between
-    # the current swapsize and our desired size.
-    new_swap_size: "{{ desired_swap_size | human_to_bytes - current_swap_size.stdout | int }}"
-  when:
-    - "'agent' in group_names[1].split('_')"
-
-- debug:
-    var: new_swap_size
-  when:
-    - "'agent' in group_names[1].split('_')"
-
-- name: Run swap tasks
-  include_tasks:
-    file: mkswap.yml
-  when:
-    - "'agent' in group_names[1].split('_')"
-    - new_swap_size | int > 0
-    - not kasm_swapfile.stat.exists
+    - kasm_manager_hostname is defined
+    - kasm_mode == 'multi'
 
 - name: Create temporary directory
   tempfile:
@@ -83,7 +77,7 @@
   register: tempdir
 
 # Debian 10 doesn't ship with the ca-certificates package installed by default
-# installing curl is portable to to ensure that ca-certificates is installed
+# installing curl is portable to ensure that ca-certificates is installed
 - name: Ensure we have curl installed
   package:
     name: curl
@@ -101,56 +95,19 @@
   when:
     - not kasm_installed
 
-- name: Run Kasm db install tasks
+- name: Run install tasks
   include_tasks:
-    file: db_install.yml
+    file: install.yml
   when:
-    - "'db' in group_names[1].split('_')"
     - not kasm_installed
 
-- name: Run remote db init tasks
-  include_tasks:
-    file: remote_db_init.yml
-  when:
-    - init_remote_db
-    - database_hostname
-    - "'web' in group_names[1].split('_')"
-    - not kasm_installed
-
-- name: Run Kasm web install tasks
-  include_tasks:
-    file: web_install.yml
-  when:
-    - "'web' in group_names[1].split('_')"
-    - not kasm_installed
-
-- name: Run Kasm agent install tasks
-  include_tasks:
-    file: agent_install.yml
-  when:
-    - "'agent' in group_names[1].split('_')" 
-    - not kasm_installed
-
-- name: Run Kasm guac install tasks
-  include_tasks:
-    file: guac_install.yml
-  when:
-    - "'guac' in group_names[1].split('_')"
-    - not kasm_installed
-
-- name: Run Kasm proxy install tasks
-  include_tasks:
-    file: proxy_install.yml
-  when:
-    - "'proxy' in group_names[1].split('_')"
-    - not kasm_installed
-
-- name: enable the docker service to run at boot
+- name: Enable the docker service to run at boot
   service:
     name: docker
     enabled: true
   become: true
-  when: start_docker_on_boot
+  when:
+    - kasm_start_docker_on_boot
   
 - name: Delete temporary directory
   file:
@@ -161,12 +118,12 @@
 - name: Print credentials
   debug:
     msg:
-      - "Database Password: {{ database_password }}"
-      - "Redis Password: {{ redis_password }}"
-      - "Manager Token: {{ manager_token }}"
-      - "Registration Token: {{ registration_token }}"
-      - "user@kasm.local password: {{ user_password }}"
-      - "admin@kasm.local password: {{ admin_password }}"
+      - "Database Password: {{ kasm_database_password }}"
+      - "Redis Password: {{ kasm_redis_password }}"
+      - "Manager Token: {{ kasm_manager_token }}"
+      - "Registration Token: {{ kasm_registration_token }}"
+      - "user@kasm.local password: {{ kasm_user_password }}"
+      - "admin@kasm.local password: {{ kasm_admin_password }}"
   run_once: true
 
 - name: Write credentials to inventory
@@ -184,20 +141,9 @@
     regexp: "{{ item.from }}"
     replace: "{{ item.to }}"
   loop:
-    - {from: "#user_password", to: "user_password"}
-    - {from: "#admin_password", to: "admin_password"}
-    - {from: "#database_password", to: "database_password"}
-    - {from: "#redis_password", to: "redis_password"}
-    - {from: "#manager_token", to: "manager_token"}
-    - {from: "#registration_token", to: "registration_token"}
-
-- name: Turn off remote db init
-  run_once: true
-  delegate_to: localhost
-  ansible.builtin.replace:
-    dest: "{{ inventory_file }}"
-    regexp: "init_remote_db: true"
-    replace: "init_remote_db: false"
-  when:
-    - init_remote_db
-    - database_hostname
+    - {from: "#kasm_user_password", to: "kasm_user_password"}
+    - {from: "#kasm_admin_password", to: "kasm_admin_password"}
+    - {from: "#kasm_database_password", to: "kasm_database_password"}
+    - {from: "#kasm_redis_password", to: "kasm_redis_password"}
+    - {from: "#kasm_manager_token", to: "kasm_manager_token"}
+    - {from: "#kasm_registration_token", to: "kasm_registration_token"}

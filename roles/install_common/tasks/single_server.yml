@@ -1,21 +1,49 @@
-- name: Install database role
-  command: > 
+---
+
+- name: Check connection from agent to webserver
+  uri:
+    url: "https://{{ web_ip }}:{{ kasm_proxy_port }}/api/__healthcheck"
+    timeout: 5
+    validate_certs: false
+  register: _result
+  until: _result.status == 200
+  retries: 7
+  delay: 5
+
+- name: Check connection from web to postgres on db server
+  wait_for:
+    port: 5432
+    host: "{{ db_ip }}"
+    timeout: 60
+
+- name: Check connection from web to redis on db server
+  wait_for:
+    port: 6379
+    host: "{{ redis_ip }}"
+    timeout: 60
+
+- name: Install all
+  command: >
     bash {{ tempdir.path }}/kasm_release/install.sh 
-      --role db 
+      --role all
       --accept-eula 
       --proxy-port {{ kasm_proxy_port }} 
+      --public-hostname {{ target_ip }} 
       --database-user {{ kasm_database_user }} 
       --database-name {{ kasm_database_name }}
       --db-password {{ kasm_database_password }} 
       --redis-password {{ kasm_redis_password }} 
       --user-password {{ kasm_user_password }} 
       --admin-password {{ kasm_admin_password }} 
+      --manager-hostname {{ web_ip }} 
       --manager-token {{ kasm_manager_token }} 
       --registration-token {{ kasm_registration_token }}
       --server-zone {{ kasm_zone }}
+      --api-hostname {{ web_ip }} 
       {{ '--no-db-ssl ' if not kasm_database_ssl }} 
       {{ '--offline-service ' ~ service_images_copy.dest if service_images_file }} 
       {{ '--offline-workspaces ' ~ workspace_images_copy.dest if workspace_images_file }}
+
   register: install_output
   become: true
   retries: 20

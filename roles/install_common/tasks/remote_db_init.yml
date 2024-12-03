@@ -17,23 +17,35 @@
       bash {{ tempdir.path }}/kasm_release/install.sh
         --role init_remote_db
         --accept-eula
-        --proxy-port {{ proxy_port }}
-        --db-hostname {{ database_hostname }}
-        --db-password {{ database_password }}
-        --database-user {{ database_user }}
-        --database-name {{ database_name }}
-        --db-master-user {{ database_master_user }}
-        --db-master-password {{ database_master_password }}
-        --db-port {{ database_port }}
-        --server-zone {{ zones[0] }}
-        --manager-token {{ manager_token }}
-        --registration-token {{ registration_token }}
-        --redis-password {{ redis_password }}
-        --user-password {{ user_password }}
-        --admin-password {{ admin_password }}
-        {{ '--no-db-ssl ' if not database_ssl }}
+        --proxy-port {{ kasm_proxy_port }}
+        --db-hostname {{ kasm_database_hostname }}
+        --db-password {{ kasm_database_password }}
+        --database-user {{ kasm_database_user }}
+        --database-name {{ kasm_database_name }}
+        --db-master-user {{ kasm_database_master_user }}
+        --db-master-password {{ kasm_database_master_password }}
+        --db-port {{ kasm_database_port }}
+        --server-zone {{ kasm_zone }}
+        --manager-token {{ kasm_manager_token }}
+        --registration-token {{ kasm_registration_token }}
+        --redis-password {{ kasm_redis_password }}
+        --user-password {{ kasm_user_password }}
+        --admin-password {{ kasm_admin_password }}
+        {{ '--no-db-ssl ' if not kasm_database_ssl }}
         {{ '--offline-service ' ~ service_images_copy.dest if service_images_file }}
     responses:
       Continue(?i): "y"
   run_once: true
   become: true
+
+# XXX
+- name: Turn off remote db init
+  run_once: true
+  delegate_to: localhost
+  ansible.builtin.replace:
+    dest: "{{ inventory_file }}"
+    regexp: "init_remote_db: true"
+    replace: "init_remote_db: false"
+  when:
+    - kasm_database_hostname
+

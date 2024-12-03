@@ -15,17 +15,17 @@
     bash {{ tempdir.path }}/kasm_release/install.sh 
       --role app 
       --accept-eula
-      --proxy-port {{ proxy_port }}
+      --proxy-port {{ kasm_proxy_port }}
       --db-hostname {{ db_ip }}
-      --db-password {{ database_password }} 
-      --redis-password {{ redis_password }} 
+      --db-password {{ kasm_database_password }} 
+      --redis-password {{ kasm_redis_password }} 
       --api-hostname {{ target_ip }} 
-      --database-user {{ database_user }} 
-      --database-name {{ database_name }}
-      --db-port {{ database_port }}
-      --server-zone {{ zones[0] }}
+      --database-user {{ kasm_database_user }} 
+      --database-name {{ kasm_database_name }}
+      --db-port {{ kasm_database_port }}
+      --server-zone {{ kasm_zone }}
       --redis-hostname {{ redis_ip }}
-      {{ '--no-db-ssl ' if not database_ssl }} 
+      {{ '--no-db-ssl ' if not kasm_database_ssl }} 
       {{ '--offline-service ' ~ service_images_copy.dest if service_images_file }} 
       {{ '--offline-workspaces ' ~ workspace_images_copy.dest if workspace_images_file }}
   register: install_output

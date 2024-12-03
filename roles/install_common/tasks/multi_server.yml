@@ -1,0 +1,59 @@
+---
+
+- name: Run agent tasks
+  include_tasks:
+    file: agent.yml
+  when:
+    - 'agent' in kasm_roles
+
+# Note: we need DB node installed before we can init the DB
+- name: Run Kasm db install tasks
+  include_tasks:
+    file: db_install.yml
+  vars:
+    kasm_zone: "{{ kasm_zones[0] }}"
+  when:
+    - 'db' in kasm_mode
+
+- name: Run remote db init tasks
+  include_tasks:
+    file: remote_db_init.yml
+  vars:
+    kasm_zone: "{{ kasm_zones[0] }}"
+  when:
+    - kasm_init_remote_db
+    - kasm_database_hostname
+    - 'web' in kasm_mode
+
+- name: Run Kasm web install tasks
+  include_tasks:
+    file: web_install.yml
+  vars:
+    kasm_zone: "{{ kasm_zones[0] }}"
+  when:
+    - 'web' in kasm_mode
+
+- name: Run Kasm agent install tasks
+  include_tasks:
+    file: agent_install.yml
+  vars:
+    kasm_zone: "{{ kasm_zones[0] }}"
+  when:
+    - 'agent' in kasm_mode
+
+- name: Run Kasm guac install tasks
+  include_tasks:
+    file: guac_install.yml
+  vars:
+    kasm_zone: "{{ kasm_zones[0] }}"
+  when:
+    - 'guac' in kasm_mode
+
+- name: Run Kasm proxy install tasks
+  include_tasks:
+    file: proxy_install.yml
+  vars:
+    kasm_zone: "{{ kasm_zones[0] }}"
+  when:
+    - 'proxy' in kasm_mode
+

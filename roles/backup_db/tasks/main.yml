@@ -1,11 +1,11 @@
 - name: Ensure backup directory exists
   file:
-    path: "{{ remote_backup_dir }}"
+    path: "{{ kasm_remote_backup_dir }}"
     state: directory
   become: true
 
 - name: Backup database
-  script: "files/backup.sh {{ remote_backup_dir }} {{ retention_days }}"
+  script: "files/backup.sh {{ kasm_remote_backup_dir }} {{ kasm_retention_days }}"
   register: backup_output
   become: true
 
@@ -16,6 +16,7 @@
 - name: Copy database backup to ansible host
   fetch:
     src: "{{ remote_backup }}"
-    dest: "{{ local_backup_dir }}"
+    dest: "{{ kasm_local_backup_dir }}"
     flat: true
-  when: local_backup_dir is defined
+  when:
+    - kasm_local_backup_dir is defined

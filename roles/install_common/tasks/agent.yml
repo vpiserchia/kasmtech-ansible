@@ -1,0 +1,17 @@
+---
+
+- set_fact:
+    # We only want to make a swapfile large enough to make up the difference between
+    # the current swapsize and our desired size.
+    new_swap_size: "{{ kasm_desired_swap_size | human_to_bytes - current_swap_size.stdout | int }}"
+
+- debug:
+    var: new_swap_size
+
+- name: Run swap tasks
+  include_tasks:
+    file: mkswap.yml
+  when:
+    - new_swap_size | int > 0
+    - not kasm_swapfile.stat.exists
+
