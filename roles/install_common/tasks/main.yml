@@ -45,7 +45,6 @@
     db_ip: "{{ kasm_database_hostname }}"
   when:
     - kasm_database_hostname
-    - kasm_mode == 'multi'
 
 - set_fact:
     redis_ip : "{{ ( kasm_mode == 'multi'|ternary(
@@ -59,20 +58,17 @@
                    ).address }}"
   when:
     - not kasm_redis_hostname
-    - kasm_mode == 'multi'
 
 - set_fact:
     redis_ip: "{{ kasm_redis_hostname }}"
   when:
     - kasm_redis_hostname
-    - kasm_mode == 'multi'
 
 - name: Override manager hostname if configured
   set_fact:
     web_ip: "{{ kasm_manager_hostname }}"
   when:
     - kasm_manager_hostname is defined
-    - kasm_mode == 'multi'
 
 - name: Create temporary directory
   tempfile:
