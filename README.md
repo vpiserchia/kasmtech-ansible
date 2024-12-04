@@ -91,12 +91,12 @@ Before running the installation against a modified inventory file please ensure 
 ```
     ## Credentials ##
     # If left commented secure passwords will be generated during the installation and substituted in upon completion
-    user_password: PASSWORD
-    admin_password: PASSWORD
-    database_password: PASSWORD
-    redis_password: PASSWORD
-    manager_token: PASSWORD
-    registration_token: PASSWORD
+    kasm_user_password: PASSWORD
+    kasm_admin_password: PASSWORD
+    kasm_database_password: PASSWORD
+    kasm_redis_password: PASSWORD
+    kasm_manager_token: PASSWORD
+    kasm_registration_token: PASSWORD
 ```
 
 #### Scaling examples
