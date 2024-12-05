@@ -1,5 +1,7 @@
 # Ansible
 
+These projects are intended as starting examples for automating Kasm Workspaces deployments via Ansible. Administrators should review the projects and add additional customizations and security enhancements as desired.
+
 ### Installing Ansible
 
 This project requires ansible 2.9.24 or greater on the host running the ansible playbook. The target systems do no not need Ansible installed.
