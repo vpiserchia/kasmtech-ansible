@@ -1,5 +1,7 @@
 # Ansible
 
+These projects are intended as starting examples for automating Kasm Workspaces deployments via Ansible. Administrators should review the projects and add additional customizations and security enhancements as desired.
+
 ### Installing Ansible
 
 This project requires ansible 2.9.24 or greater on the host running the ansible playbook. The target systems do no not need Ansible installed.
@@ -64,7 +66,7 @@ It has been tested on CentOS 7.9.2009, CentOS 8.4.2105, Debian 9.13, Debian 10.1
 
 3. Download the Kasm Workspaces installer from https://www.kasmweb.com/downloads.html and copy it to `roles/install_common/files`. 
     
-    Optionally, if doing an offline installation: Download and copy the workspace_images and service_images files to `roles/install_common/files`.
+    Optionally, if doing an offline installation: Download and copy the workspace_images, service_images and network plugin files to `roles/install_common/files`.
    
 4. Run the deployment.
 
